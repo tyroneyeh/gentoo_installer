@@ -1,0 +1,14 @@
+---
+
+- name: test
+  hosts: localhost
+  tasks:
+  - name: test vars
+    debug: var="{{ ansible_memtotal_mb }}"
+
+  - name: Modify sudoers
+    ansible.builtin.lineinfile:
+      path: /etc/sudoers
+      state: present
+      regexp: '^# %wheel ALL=\(ALL\) ALL'
+      line: '%wheel ALL=(ALL) ALL'

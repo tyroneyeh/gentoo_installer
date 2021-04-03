@@ -76,11 +76,6 @@
     stat: path="/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt') }}"
     register: stat_result
 
-  - name: "Remove latest-stage3-{{ systype }}.txt"
-    ansible.builtin.file:
-      path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
-      state: absent
-
   - name: Download latest stage3 file
     get_url:
       url: "{{ stage3file }}"
@@ -97,6 +92,11 @@
       src: "/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt') }}"
       dest: /mnt/gentoo/
     when: not stage3.stat.exists
+
+  - name: "Remove latest-stage3-{{ systype }}.txt"
+    ansible.builtin.file:
+      path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
+      state: absent
 
   - name: Mount dev
     ansible.posix.mount:
@@ -247,7 +247,7 @@
     command: chroot /mnt/gentoo bash -c 'emerge grub sudo eix'
     when: not grub.stat.exists
 
-  - name: Remove distfiles directory
+  - name: Remove distfiles directory files
     ansible.builtin.file:
       path: /mnt/gentoo/var/cache/distfiles/*
       state: absent

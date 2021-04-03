@@ -248,9 +248,9 @@
     when: not grub.stat.exists
 
   - name: Remove distfiles directory
-      ansible.builtin.file:
-        path: /mnt/gentoo/var/cache/distfiles/*
-        state: absent
+    ansible.builtin.file:
+      path: /mnt/gentoo/var/cache/distfiles/*
+      state: absent
 
   - name: Run grub install
     command: chroot /mnt/gentoo bash -c 'grub-install /dev/sda'

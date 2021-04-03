@@ -7,7 +7,7 @@
 
 systemctl=`which systemctl`
 systemd=0
-if [ $? -eq 0 ]; then
+if [ $? -eq 1 ]; then
     systemd=1
     eselect profile set default/linux/amd64/17.1/desktop/plasma/systemd
 else
@@ -16,7 +16,7 @@ fi
 
 set -e
 
-if [ "`grep -o llvm /etc/portage/package.mask/customs`" = "" ]; then
+if [ -f /etc/portage/package.mask/customs -a "`grep -o llvm /etc/portage/package.mask/customs`" = "" ]; then
     echo sys-level/llvm >> /etc/portage/package.mask/customs
     echo sys-level/llvm-common >> /etc/portage/package.mask/customs
 fi

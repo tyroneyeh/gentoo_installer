@@ -6,9 +6,8 @@
 #
 
 systemctl=`which systemctl`
-systemd=0
-if [ $? -eq 1 ]; then
-    systemd=1
+nonsystemd=$?
+if [ $nonsystemd -eq 0 ]; then
     eselect profile set default/linux/amd64/17.1/desktop/plasma/systemd
 else
     eselect profile set default/linux/amd64/17.1/desktop/plasma
@@ -21,7 +20,7 @@ if [ ! -f /etc/portage/package.mask/customs -o "`grep -o llvm /etc/portage/packa
     echo sys-level/llvm-common >> /etc/portage/package.mask/customs
 fi
 
-if [ ! -f /etc/portage/package.use/customs -o "`grep -o libdrm`" = "" ]; then
+if [ ! -f /etc/portage/package.use/customs -o "`grep -o libdrm /etc/portage/package.use/customs`" = "" ]; then
     echo x11-libs/libdrm libkms >> /etc/portage/package.use/customs
     echo media-libs/mesa xa >> /etc/portage/package.use/customs
     echo sys-apps/dbus user-session >> /etc/portage/package.use/customs
@@ -32,7 +31,7 @@ emerge -uDN world
 
 sed -i 's/"xdm"/"sddm"/' /etc/conf.d/xdm
 
-if [ $systemd -eq 1 ]; then
+if [ $nonsystemd -eq 0 ]; then
     systemctl enable xdm
     systemctl enable dbus
     systemctl enable NetworkManager

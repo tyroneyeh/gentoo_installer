@@ -2,12 +2,14 @@
 
 #
 # Create by Tyrone Yeh @ 20210402
+# The file URL https://git.io/JY10E
 #
 
 - name: Starting Gentoo Install
   hosts: localhost
   vars:
     - servername: gentooserver
+    - timezone: Asia/Taipei
     - systype: amd64 # amd64-systemd
     - useflag: "bindist -bluetooth -llvm -video_cards_radeon -video_cards_radeonsi"
     - installjobs: 3
@@ -71,8 +73,13 @@
       replace: '\1'
 
   - name: Check stage3 file exists
-    stat: path="/mnt/gentoo/{{lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt')}}"
+    stat: path="/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt') }}"
     register: stat_result
+
+  - name: "Remove latest-stage3-{{ systype }}.txt"
+    ansible.builtin.file:
+      path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
+      state: absent
 
   - name: Download latest stage3 file
     get_url:
@@ -81,13 +88,13 @@
       tmp_dest: /mnt/gentoo/
     when: not stat_result.stat.exists
 
-  - name: Check Stage3
-    stat: path=/mnt/gentoo/usr/bin
+  - name: Check Stage3 unpacked
+    stat: path="/mnt/gentoo/root"
     register: stage3
 
   - name: Unpack Stage3
     unarchive:
-      src: /mnt/gentoo/{{lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt')}}
+      src: "/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt') }}"
       dest: /mnt/gentoo/
     when: not stage3.stat.exists
 
@@ -131,6 +138,11 @@
       state: present
       regexp: ^hostname=
       line: 'hostname="{{ servername }}"'
+
+  - name: Set timezone
+    ansible.builtin.copy:
+      src: /mnt/gentoo/usr/share/zoneinfo/{{ timezone }}
+      dest: /mnt/gentoo/etc/localtime
 
   - name: Set eth0 using DHCP
     ansible.builtin.lineinfile:
@@ -183,25 +195,25 @@
       line: VIDEO_CARDS="{{ video_cards }}"
 
   - name: Check Portage command
-    stat: path=/mnt/gentoo/usr/bin/emerge
-    register: emerge
+    stat: path=/mnt/gentoo/var/db/repos/gentoo
+    register: portage
 
   - name: Get Portage
     get_url:
       url: http://gentoo.cs.nctu.edu.tw/gentoo-distfiles/snapshots/portage-latest.tar.xz
       dest: /mnt/gentoo/
       tmp_dest: /mnt/gentoo/
-    when: not emerge.stat.exists
+    when: not portage.stat.exists
 
   - name: Unpack Portage
     unarchive:
       src: /mnt/gentoo/portage-latest.tar.xz
       dest: /mnt/gentoo/
-    when: not emerge.stat.exists
+    when: not portage.stat.exists
 
   - name: Move Portage
     command: mv /mnt/gentoo/portage /mnt/gentoo/var/db/repos/gentoo
-    when: not emerge.stat.exists
+    when: not portage.stat.exists
 
   - name: Get kernel version from ISO
     ansible.builtin.shell: uname -r
@@ -234,6 +246,11 @@
   - name: emerge grub sudo packages
     command: chroot /mnt/gentoo bash -c 'emerge grub sudo eix'
     when: not grub.stat.exists
+
+  - name: Remove distfiles directory
+      ansible.builtin.file:
+        path: /mnt/gentoo/var/cache/distfiles/*
+        state: absent
 
   - name: Run grub install
     command: chroot /mnt/gentoo bash -c 'grub-install /dev/sda'

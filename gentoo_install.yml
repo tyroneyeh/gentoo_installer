@@ -56,7 +56,7 @@
       dest: /mnt/gentoo/
       timeout: 600
 
-  - name: Read latest stage3 file remove something
+  - name: Read latest stage3 file remove comment
     ansible.builtin.replace:
       path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
       regexp: '^#.*\n|(.*) \d+\n'
@@ -66,7 +66,7 @@
     set_fact:
       stage3file: "http://gentoo.cs.nctu.edu.tw/gentoo-distfiles/releases/amd64/autobuilds/{{lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt')}}"
 
-  - name: Read latest stage3 file remove something
+  - name: Read latest stage3 file for get stage3 filename
     ansible.builtin.replace:
       path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
       regexp: '.*\/(.*)'

@@ -2,7 +2,7 @@
 
 #
 # Create by Tyrone Yeh @ 20210402
-# The file URL https://git.io/JY1BT
+# The file URL: wget https://git.io/JY1BT -O install_gentoo.sh
 #
 
 set -e

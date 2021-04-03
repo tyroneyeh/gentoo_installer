@@ -2,7 +2,7 @@
 
 #
 # Create by Tyrone Yeh @ 20210402
-# The file URL https://git.io/JY1ER
+# The file URL: wget https://git.io/JY1ER -O install_kde.sh
 #
 
 systemctl=`which systemctl`

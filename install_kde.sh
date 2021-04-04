@@ -16,8 +16,8 @@ fi
 set -e
 
 if [ ! -f /etc/portage/package.mask/customs -o "`grep -o llvm /etc/portage/package.mask/customs`" = "" ]; then
-    echo sys-level/llvm >> /etc/portage/package.mask/customs
-    echo sys-level/llvm-common >> /etc/portage/package.mask/customs
+    echo sys-devel/llvm >> /etc/portage/package.mask/customs
+    echo sys-devel/llvm-common >> /etc/portage/package.mask/customs
 fi
 
 if [ ! -f /etc/portage/package.use/customs -o "`grep -o libdrm /etc/portage/package.use/customs`" = "" ]; then
@@ -26,7 +26,10 @@ if [ ! -f /etc/portage/package.use/customs -o "`grep -o libdrm /etc/portage/pack
     echo sys-apps/dbus user-session >> /etc/portage/package.use/customs
 fi
 
-emerge plasma-meta sddm kdecore-meta
+if [ ! -d /var/db/pkg/kde-plasma -o ! -d /var/db/pkg/kde-apps/kdecore-meta ]; then
+    emerge plasma-meta sddm kdecore-meta
+fi
+
 emerge -uDN world
 
 sed -i 's/"xdm"/"sddm"/' /etc/conf.d/xdm

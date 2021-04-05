@@ -169,7 +169,7 @@
     ansible.builtin.lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
-      regexp: ^GENTOO_MIRRORS
+      regexp: ^EMERGE_DEFAULT_OPTS
       line: EMERGE_DEFAULT_OPTS="--jobs {{ lookup('env', 'installjobs') }} --autounmask-write"
 
   - name: Modify make.conf PYTHON_TARGETS

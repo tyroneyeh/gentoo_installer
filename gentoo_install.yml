@@ -81,7 +81,7 @@
 
   - name: Unpack Stage3
     unarchive:
-      src: "/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt') }}"
+      src: "/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup(\"env\", \"systype\") }}.txt') }}"
       dest: /mnt/gentoo/
     when: not stage3.stat.exists
 

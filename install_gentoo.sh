@@ -5,6 +5,18 @@
 # The file URL: wget https://git.io/JY1BT -O install_gentoo.sh
 #
 
+# ----- Settings -----
+export servername=gentooserver
+export timezone="Asia/Taipei"
+export systype=amd64 # amd64-systemd
+export useflag="bindist -bluetooth -llvm -video_cards_radeon -video_cards_radeonsi"
+export installjobs=3
+export python_targets="python3_8"
+export video_cards"vmware"
+export root_partitionsize="80%"
+export mirrorsite=http://gentoo.cs.nctu.edu.tw/gentoo-distfiles
+# --------------------
+
 set -e
 
 if [ ! -f .local/bin/pip ]; then

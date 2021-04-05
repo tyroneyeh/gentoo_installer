@@ -5,6 +5,11 @@
 # The file URL: wget https://git.io/JY1ER -O install_kde.sh
 #
 
+if [ $USER != "root" ]; then
+    echo Please use [sudo sh install_kde.sh]
+    exit
+fi
+
 systemctl=`which systemctl`
 nonsystemd=$?
 if [ $nonsystemd -eq 0 ]; then
@@ -26,6 +31,11 @@ if [ ! -f /etc/portage/package.use/customs -o "`grep -o libdrm /etc/portage/pack
     echo sys-apps/dbus user-session >> /etc/portage/package.use/customs
 fi
 
+if [ ! -f /etc/portage/package.mask/notbinpkgs ]; then
+    eix-update
+    EIX_LIMIMT=0 eix -# "\-bin$" | awk -F "/" '{gsub("-bin", "", $2);print $1"/"$2}' >> /etc/portage/package.mask/notbinpkgs
+fi
+
 if [ ! -d /var/db/pkg/kde-plasma -o ! -d /var/db/pkg/kde-apps/kdecore-meta ]; then
     emerge plasma-meta sddm kdecore-meta
 fi
@@ -45,4 +55,3 @@ else
     rc-update add NetworkManager
     rc-service xdm restart
 fi
-

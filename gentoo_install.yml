@@ -7,14 +7,6 @@
 
 - name: Starting Gentoo Install
   hosts: localhost
-  vars:
-    - servername: gentooserver
-    - timezone: Asia/Taipei
-    - systype: amd64 # amd64-systemd
-    - useflag: "bindist -bluetooth -llvm -video_cards_radeon -video_cards_radeonsi"
-    - installjobs: 3
-    - python_targets: python3_8
-    - video_cards: vmware
   tasks:
   - name: Prepare partitions
     community.general.parted:
@@ -23,7 +15,7 @@
       state: present
       fs_type: ext4
       flags: boot
-      part_end: 80%
+      part_end: "{{ lookup('env', 'root_partitionsize') }}"
 
   - name: Swap partitions
     community.general.parted:
@@ -31,7 +23,7 @@
       number: 2
       state: present
       fs_type: linux-swap
-      part_start: 80%
+      part_start: "{{ lookup('env', 'root_partitionsize') }}"
 
   - name: Make filesystem
     community.general.filesystem:
@@ -52,28 +44,28 @@
 
   - name: Download latest stage3 info
     get_url:
-      url: "http://gentoo.cs.nctu.edu.tw/gentoo-distfiles/releases/amd64/autobuilds/latest-stage3-{{ systype }}.txt"
+      url: "{{ lookup('env', 'mirrorsite') }}/releases/amd64/autobuilds/latest-stage3-{{ lookup('env', 'systype') }}.txt"
       dest: /mnt/gentoo/
       timeout: 600
 
   - name: Read latest stage3 file remove comment
     ansible.builtin.replace:
-      path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
+      path: "/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt"
       regexp: '^#.*\n|(.*) \d+\n'
       replace: '\1'
 
   - name: Set download stage3 url
     set_fact:
-      stage3file: "http://gentoo.cs.nctu.edu.tw/gentoo-distfiles/releases/amd64/autobuilds/{{lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt')}}"
+      stage3file: "{{ lookup('env', 'mirrorsite') }}/releases/amd64/autobuilds/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup(\"env\", \"systype\") }}.txt') }}"
 
   - name: Read latest stage3 file for get stage3 filename
     ansible.builtin.replace:
-      path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
+      path: "/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt"
       regexp: '.*\/(.*)'
       replace: '\1'
 
   - name: Check stage3 file exists
-    stat: path="/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt') }}"
+    stat: path="/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup(\"env\", \"systype\") }}.txt') }}"
     register: stat_result
 
   - name: Download latest stage3 file
@@ -89,13 +81,13 @@
 
   - name: Unpack Stage3
     unarchive:
-      src: "/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ systype }}.txt') }}"
+      src: "/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt') }}"
       dest: /mnt/gentoo/
     when: not stage3.stat.exists
 
-  - name: "Remove latest-stage3-{{ systype }}.txt"
+  - name: "Remove latest-stage3-{{ lookup('env', 'systype') }}.txt"
     ansible.builtin.file:
-      path: "/mnt/gentoo/latest-stage3-{{ systype }}.txt"
+      path: "/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt"
       state: absent
 
   - name: Mount dev
@@ -137,11 +129,11 @@
       path: /mnt/gentoo/etc/conf.d/hostname
       state: present
       regexp: ^hostname=
-      line: 'hostname="{{ servername }}"'
+      line: 'hostname="{{ lookup("env", "servername") }}"'
 
   - name: Set timezone
     ansible.builtin.copy:
-      src: /mnt/gentoo/usr/share/zoneinfo/{{ timezone }}
+      src: /mnt/gentoo/usr/share/zoneinfo/{{ lookup('env', 'timezone') }}
       dest: /mnt/gentoo/etc/localtime
 
   - name: Set eth0 using DHCP
@@ -164,35 +156,35 @@
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^USE
-      line: USE="{{ useflag }}"
+      line: USE="{{ lookup('env', 'useflag') }}"
 
   - name: Modify make.conf GENTOO_MIRRORS
     ansible.builtin.lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^GENTOO_MIRRORS
-      line: GENTOO_MIRRORS="http://gentoo.cs.nctu.edu.tw/gentoo-distfiles http://ftp.twaren.net/Gentoo/"
+      line: GENTOO_MIRRORS="{{ lookup('env', 'mirrorsite') }} http://ftp.twaren.net/Gentoo/"
 
   - name: Modify make.conf EMERGE_DEFAULT_OPTS
     ansible.builtin.lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^GENTOO_MIRRORS
-      line: EMERGE_DEFAULT_OPTS="--jobs {{ installjobs }} --autounmask-write"
+      line: EMERGE_DEFAULT_OPTS="--jobs {{ lookup('env', 'installjobs') }} --autounmask-write"
 
   - name: Modify make.conf PYTHON_TARGETS
     ansible.builtin.lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^PYTHON_TARGETS
-      line: PYTHON_TARGETS="{{ python_targets }}"
+      line: PYTHON_TARGETS="{{ lookup('env', 'python_targets') }}"
 
   - name: Modify make.conf VIDEO_CARDS
     ansible.builtin.lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^VIDEO_CARDS
-      line: VIDEO_CARDS="{{ video_cards }}"
+      line: VIDEO_CARDS="{{ lookup('env', 'video_cards') }}"
 
   - name: Check Portage command
     stat: path=/mnt/gentoo/var/db/repos/gentoo
@@ -200,7 +192,7 @@
 
   - name: Get Portage
     get_url:
-      url: http://gentoo.cs.nctu.edu.tw/gentoo-distfiles/snapshots/portage-latest.tar.xz
+      url: "{{ lookup('env', 'mirrorsite') }}/snapshots/portage-latest.tar.xz"
       dest: /mnt/gentoo/
       tmp_dest: /mnt/gentoo/
     when: not portage.stat.exists
@@ -243,13 +235,13 @@
     stat: path=/mnt/gentoo/usr/sbin/grub-install
     register: grub
 
-  - name: emerge grub sudo packages
+  - name: emerge grub sudo eix packages
     command: chroot /mnt/gentoo bash -c 'emerge grub sudo eix'
     when: not grub.stat.exists
 
   - name: Remove distfiles directory files
     ansible.builtin.file:
-      path: /mnt/gentoo/var/cache/distfiles/*
+      path: /mnt/gentoo/var/cache/distfiles
       state: absent
 
   - name: Run grub install

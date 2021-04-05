@@ -61,4 +61,4 @@ chroot /mnt/gentoo bash -c "gpasswd -a $username audio"
 chroot /mnt/gentoo bash -c "gpasswd -a $username video"
 chroot /mnt/gentoo bash -c "gpasswd -a $username users"
 
-echo "Congratulations! your Gentoo installed, please eject CD and [reboot]."
+echo "Congratulations! your Gentoo installed, please [reboot] then eject CD."

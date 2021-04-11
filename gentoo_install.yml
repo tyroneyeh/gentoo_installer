@@ -49,7 +49,7 @@
       timeout: 600
 
   - name: Read latest stage3 file remove comment
-    ansible.builtin.replace:
+    replace:
       path: "/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt"
       regexp: '^#.*\n|(.*) \d+\n'
       replace: '\1'
@@ -59,12 +59,12 @@
       stage3file: "{{ lookup('env', 'mirrorsite') }}/releases/amd64/autobuilds/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup(\"env\", \"systype\") }}.txt') }}"
 
   - name: Read latest stage3 file for get stage3 filename
-    ansible.builtin.replace:
+    replace:
       path: "/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt"
       regexp: '.*\/(.*)'
       replace: '\1'
 
-  - name: Check stage3 file exists
+  - name: Checking stage3 file exists
     stat: path="/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup(\"env\", \"systype\") }}.txt') }}"
     register: stat_result
 
@@ -75,18 +75,18 @@
       tmp_dest: /mnt/gentoo/
     when: not stat_result.stat.exists
 
-  - name: Check Stage3 unpacked
+  - name: Checking Stage3 unpacked
     stat: path="/mnt/gentoo/root"
     register: stage3
 
-  - name: Unpack Stage3
+  - name: Unpacking Stage3
     unarchive:
       src: "/mnt/gentoo/{{ lookup('file', '/mnt/gentoo/latest-stage3-{{ lookup(\"env\", \"systype\") }}.txt') }}"
       dest: /mnt/gentoo/
     when: not stage3.stat.exists
 
   - name: "Remove latest-stage3-{{ lookup('env', 'systype') }}.txt"
-    ansible.builtin.file:
+    file:
       path: "/mnt/gentoo/latest-stage3-{{ lookup('env', 'systype') }}.txt"
       state: absent
 
@@ -106,87 +106,90 @@
       fstype: proc
 
   - name: Copy resolve.conf
-    ansible.builtin.copy:
+    copy:
       src: /etc/resolv.conf
       dest: /mnt/gentoo/etc/
 
   - name: Modify fstab for root
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/fstab
       state: present
       regexp: ^/dev/sda1
       line: "/dev/sda1\t\t/\t\text4\t\tnoatime\t\t0 1"
 
   - name: Modify fstab for swap
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/fstab
       state: present
       regexp: ^/dev/sda2
       line: "/dev/sda2\t\tnone\t\tswap\t\tsw\t\t0 0"
 
   - name: Modify hostname
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/conf.d/hostname
       state: present
       regexp: ^hostname=
       line: 'hostname="{{ lookup("env", "servername") }}"'
+    tags: openrc
 
   - name: Set timezone
-    ansible.builtin.copy:
+    copy:
       src: /mnt/gentoo/usr/share/zoneinfo/{{ lookup('env', 'timezone') }}
       dest: /mnt/gentoo/etc/localtime
+    tags: openrc
 
   - name: Set eth0 using DHCP
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/net
       state: present
       regexp: ^config_eth0
       line: config_eth0="dhcp"
       create: yes
+    tags: openrc
 
   - name: Modify make.conf MAKEOPTS
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^MAKEOPTS
       line: "MAKEOPTS=-j{{ ansible_processor_cores + 1 }}"
 
   - name: Modify make.conf USE
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^USE
       line: USE="{{ lookup('env', 'useflag') }}"
 
   - name: Modify make.conf GENTOO_MIRRORS
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^GENTOO_MIRRORS
       line: GENTOO_MIRRORS="{{ lookup('env', 'mirrorsite') }} http://ftp.twaren.net/Gentoo/"
 
   - name: Modify make.conf EMERGE_DEFAULT_OPTS
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^EMERGE_DEFAULT_OPTS
       line: EMERGE_DEFAULT_OPTS="--jobs {{ lookup('env', 'installjobs') }} --autounmask-write"
 
   - name: Modify make.conf PYTHON_TARGETS
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^PYTHON_TARGETS
       line: PYTHON_TARGETS="{{ lookup('env', 'python_targets') }}"
 
   - name: Modify make.conf VIDEO_CARDS
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/portage/make.conf
       state: present
       regexp: ^VIDEO_CARDS
       line: VIDEO_CARDS="{{ lookup('env', 'video_cards') }}"
 
-  - name: Check Portage command
+  - name: Checking Portage command
     stat: path=/mnt/gentoo/var/db/repos/gentoo
     register: portage
 
@@ -197,7 +200,7 @@
       tmp_dest: /mnt/gentoo/
     when: not portage.stat.exists
 
-  - name: Unpack Portage
+  - name: Unpacking Portage
     unarchive:
       src: /mnt/gentoo/portage-latest.tar.xz
       dest: /mnt/gentoo/
@@ -208,30 +211,30 @@
     when: not portage.stat.exists
 
   - name: Get kernel version from ISO
-    ansible.builtin.shell: uname -r
+    shell: uname -r
     register: kernelver
 
   - name: Copy kernel from ISO
-    ansible.builtin.copy:
+    copy:
       src: /mnt/cdrom/boot/gentoo
       dest: "/mnt/gentoo/boot/kernel-{{ kernelver.stdout }}"
 
   - name: Copy initramfs from ISO
-    ansible.builtin.copy:
+    copy:
       src: /mnt/cdrom/boot/gentoo.igz
       dest: "/mnt/gentoo/boot/initramfs-{{ kernelver.stdout }}.img"
 
-  - name: Check kernel modules
+  - name: Checking kernel modules
     stat: path="/mnt/gentoo/lib/modules/{{ kernelver.stdout }}"
     register: kernelmod
 
   - name: Copy kernel modules from ISO
-    ansible.builtin.command: cp -ap "/lib/modules/{{ kernelver.stdout }}" /mnt/gentoo/lib/modules/
+    command: cp -ap "/lib/modules/{{ kernelver.stdout }}" /mnt/gentoo/lib/modules/
     when: not kernelmod.stat.exists
     async: 10
     poll: 0
 
-  - name: Check grub
+  - name: Checking grub
     stat: path=/mnt/gentoo/usr/sbin/grub-install
     register: grub
 
@@ -239,8 +242,13 @@
     command: chroot /mnt/gentoo bash -c 'emerge grub sudo eix'
     when: not grub.stat.exists
 
+  - name: emerge networkmanager packages
+    command: chroot /mnt/gentoo bash -c 'emerge networkmanager'
+    when: not grub.stat.exists
+    tags: systemd
+
   - name: Remove distfiles directory files
-    ansible.builtin.file:
+    file:
       path: /mnt/gentoo/var/cache/distfiles
       state: absent
 
@@ -248,14 +256,14 @@
     command: chroot /mnt/gentoo bash -c 'grub-install /dev/sda'
 
   - name: Modify default grub for eth0
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/default/grub
       state: present
       regexp: '^#GRUB_CMDLINE_LINUX='
       line: GRUB_CMDLINE_LINUX="net.ifnames=0"
 
   - name: Modify sudoers
-    ansible.builtin.lineinfile:
+    lineinfile:
       path: /mnt/gentoo/etc/sudoers
       state: present
       regexp: '^# %wheel ALL=\(ALL\) ALL'

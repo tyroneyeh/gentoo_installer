@@ -8,13 +8,13 @@
 # ----- Settings -----
 export servername=gentooserver
 export timezone="Asia/Taipei"
-export systype=amd64 # amd64-systemd
-export useflag="bindist -bluetooth -llvm -video_cards_radeon -video_cards_radeonsi"
+export systype=amd64 # amd64, amd64-systemd
+export useflag="bindist dbus -bluetooth -llvm -video_cards_radeon -video_cards_radeonsi"
 export installjobs=3
 export python_targets="python3_8"
-export video_cards"vmware"
-export root_partitionsize="80%"
-export mirrorsite=http://gentoo.cs.nctu.edu.tw/gentoo-distfiles
+export video_cards"virtualbox" # Ref. https://wiki.gentoo.org/wiki/Xorg/Guide
+export root_partitionsize="80%" # 80% root, 20% swap
+export mirrorsite=http://gentoo.cs.nctu.edu.tw/gentoo-distfiles # Ref. https://www.gentoo.org/downloads/mirrors/
 # --------------------
 
 set -e
@@ -29,7 +29,11 @@ if [ ! -f gentoo_install.yml ]; then
     wget https://git.io/JY10E -O gentoo_install.yml
 fi
 
-.local/bin/ansible-playbook gentoo_install.yml
+if [ "$systype" = "amd64" ]; then
+    .local/bin/ansible-playbook --skip-tags "systemd" gentoo_install.yml
+else
+    .local/bin/ansible-playbook --skip-tags "openrc" gentoo_install.yml
+fi
 
 if [ -f /mnt/gentoo/sbin/openrc-run ]; then
     if [ ! -f /mnt/gentoo/etc/init.d/net.eth0 ]; then

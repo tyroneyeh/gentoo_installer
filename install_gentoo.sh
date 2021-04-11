@@ -12,7 +12,7 @@ export systype=amd64 # amd64, amd64-systemd
 export useflag="bindist dbus -bluetooth -llvm -video_cards_radeon -video_cards_radeonsi"
 export installjobs=3
 export python_targets="python3_8"
-export video_cards"virtualbox" # Ref. https://wiki.gentoo.org/wiki/Xorg/Guide
+export video_cards"virtualbox vmware" # Ref. https://wiki.gentoo.org/wiki/Xorg/Guide
 export root_partitionsize="80%" # 80% root, 20% swap
 export mirrorsite=http://gentoo.cs.nctu.edu.tw/gentoo-distfiles # Ref. https://www.gentoo.org/downloads/mirrors/
 # --------------------

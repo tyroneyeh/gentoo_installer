@@ -24,7 +24,7 @@ if [ ! -f .local/bin/pip ]; then
     python get-pip.py
     python -m pip install ansible
     .local/bin/ansible-galaxy collection install community.general
-    .local/bin/ansible-galaxy collection install sensible.posix
+    .local/bin/ansible-galaxy collection install ansible.posix
 fi
 
 if [ ! -f gentoo_install.yml ]; then

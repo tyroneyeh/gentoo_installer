@@ -20,11 +20,11 @@ fi
 
 set -e
 
-if [ ! -f /etc/portage/package.mask/customs -o "`grep -o llvm /etc/portage/package.mask/customs`" = "" ]; then
-    mkdir -p /etc/portage/package.mask
-    echo sys-devel/llvm >> /etc/portage/package.mask/customs
-    echo sys-devel/llvm-common >> /etc/portage/package.mask/customs
-fi
+#if [ ! -f /etc/portage/package.mask/customs -o "`grep -o llvm /etc/portage/package.mask/customs`" = "" ]; then
+#    mkdir -p /etc/portage/package.mask
+#    echo sys-devel/llvm >> /etc/portage/package.mask/customs
+#    echo sys-devel/llvm-common >> /etc/portage/package.mask/customs
+#fi
 
 if [ ! -f /etc/portage/package.use/customs -o "`grep -o libdrm /etc/portage/package.use/customs`" = "" ]; then
     mkdir -p /etc/portage/package.use
